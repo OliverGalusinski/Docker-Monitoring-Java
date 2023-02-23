@@ -27,21 +27,27 @@ public class Main {
                 .responseTimeout(Duration.ofSeconds(45))
                 .build();
 
-        DockerHttpClient.Request request = DockerHttpClient.Request.builder()
-                .method(DockerHttpClient.Request.Method.GET)
-                .path("/_ping")
-                .build();
-
-        try (DockerHttpClient.Response response = httpClient.execute(request)) {
-        }
-
         DockerClient dockerClient = DockerClientImpl.getInstance(config, httpClient);
         dockerClient.pingCmd().exec();
-        List containers = dockerClient.listContainersCmd().exec();
+        List<Container> containers = dockerClient.listContainersCmd().exec();
 
-        for(int i = 0; i<containers.size(); i++){
-            System.out.println(containers.get(i));
+        for(Container container : containers){
+            System.out.println(container.getId());
+            LogContainerCmd logContainerCmd = dockerClient.logContainerCmd(container.getId());
+            logContainerCmd.withStdOut(true).withStdErr(true);
+            // logContainerCmd.withTail(4);  // get only the last 4 log entries
+
+            logContainerCmd.withTimestamps(true);
+
+            try {
+                logContainerCmd.exec(new LogContainerResultCallback() {
+                    @Override
+                    public void onNext(Frame item) {
+                        System.out.println(item.toString());
+                    }
+                }).awaitCompletion();
+            } catch (InterruptedException e) {
+            }
         }
     }
 }
-

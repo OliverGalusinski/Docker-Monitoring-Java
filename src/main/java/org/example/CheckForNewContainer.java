@@ -67,23 +67,5 @@ public class CheckForNewContainer extends Thread{
                 i--;
             }
         }
-
-        // Check if newContainers has a
-
-            /*
-            newContainers.stream().forEach(newContainer ->{
-                if(!containers.contains(newContainer)) {
-                    MonitorContainer monitorContainer = new MonitorContainer(newContainer); // Creates a new Monitoring Thread for this specific Container
-                    monitorContainers.put(newContainer.getId(), monitorContainer); // Puts it insideof a list containing all already Monitored containers
-                    monitorContainer.start(); // Starts the Monitor
-                    containers.add(newContainer); // Adds container to the Container List
-                    System.out.println("Added " + newContainer);
-                }
-            });
-}
-             */
-
-        // Loops through newContainers and checks if a new container has appeared
-
     }
 }

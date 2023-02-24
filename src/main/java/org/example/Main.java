@@ -12,6 +12,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
+        /*
         DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
                 .dockerHost(config.getDockerHost())
@@ -31,5 +32,10 @@ public class Main {
                 System.out.println(log);
             }
         }
+         */
+
+        CheckForNewContainer checkForNewContainer = new CheckForNewContainer();
+        checkForNewContainer.setName("CheckForNewContainer-Thread");
+        checkForNewContainer.start();
     }
 }

@@ -19,6 +19,7 @@ public class GetLogs {
                 .withStdOut(true)
                 .withStdErr(true)
                 .withTimestamps(true);
+
         if(timeStamp != 0){
             logContainerCmd.withSince(timeStamp);
         }
@@ -30,7 +31,8 @@ public class GetLogs {
                     logs.add(item.toString());
                 }
             }).awaitCompletion();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ie) {
+            throw new RuntimeException(ie);
         }
         int unixTime = (int) Instant.now().getEpochSecond();
         return new GetLogsReturningValues(logs, unixTime);

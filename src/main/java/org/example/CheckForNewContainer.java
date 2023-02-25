@@ -14,12 +14,12 @@ import java.util.HashMap;
 import java.util.List;
 
 // This should constantly run and check for new Container to add them to a list
-// Should also check if exisiting ones closed themselves, if so should safely close its thread
+// Should also check if existing ones closed themselves, if so should safely close its thread
 // Maintains all Information inside of Lists
 public class CheckForNewContainer extends Thread{
-    private HashMap<String, MonitorContainer> monitoredContainers = new HashMap(); // A list of all Containers that are being Monitored
-    private ArrayList<String> containers = new ArrayList<>();
-    private DockerClient dockerClient;
+    private final HashMap<String, MonitorContainer> monitoredContainers = new HashMap<>(); // A list of all Containers that are being Monitored
+    private final ArrayList<String> containers = new ArrayList<>();
+    private final DockerClient dockerClient;
 
     // Creates a Dockerclient
     // Also check for all Available Containers
@@ -39,8 +39,14 @@ public class CheckForNewContainer extends Thread{
 
     // This gets executed as Thread is being started
     public void run(){
-        while(!isInterrupted())
-            checkForNewContainers();
+        while(!isInterrupted()) {
+            try {
+                checkForNewContainers();
+                sleep(3000);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private void checkForNewContainers(){
@@ -60,7 +66,7 @@ public class CheckForNewContainer extends Thread{
         // If newContainer doesnt exist
         for(int i = 0; i < containers.size(); i++){
             int finalI = i;
-            if(!newContainers.stream().anyMatch(newContainer -> newContainer.getId().equals(containers.get(finalI)))){
+            if(newContainers.stream().noneMatch(newContainer -> newContainer.getId().equals(containers.get(finalI)))){
                 monitoredContainers.get(containers.get(i)).stopThread();
                 monitoredContainers.remove(containers.get(i));
                 containers.remove(i);

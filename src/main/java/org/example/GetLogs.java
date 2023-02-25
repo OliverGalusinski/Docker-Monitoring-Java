@@ -5,21 +5,23 @@ import com.github.dockerjava.api.command.LogContainerCmd;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GetLogs {
     private GetLogs(){}
 
-    public static List<String> getLogs(DockerClient dockerClient, String containerID, int timeStamp){
+    public static GetLogsReturningValues getLogs(DockerClient dockerClient, String containerID, int timeStamp){
         List<String> logs = new ArrayList<>();
 
-        LogContainerCmd logContainerCmd = dockerClient.logContainerCmd(containerID);
-        logContainerCmd.withStdOut(true).withStdErr(true);
-        logContainerCmd.withSince(1677166678);
-        // logContainerCmd.withTail(4);  // get only the last 4 log entries
-
-        logContainerCmd.withTimestamps(true);
+        LogContainerCmd logContainerCmd = dockerClient.logContainerCmd(containerID)
+                .withStdOut(true)
+                .withStdErr(true)
+                .withTimestamps(true);
+        if(timeStamp != 0){
+            logContainerCmd.withSince(timeStamp);
+        }
 
         try {
             logContainerCmd.exec(new LogContainerResultCallback() {
@@ -30,6 +32,7 @@ public class GetLogs {
             }).awaitCompletion();
         } catch (InterruptedException e) {
         }
-        return logs;
+        int unixTime = (int) Instant.now().getEpochSecond();
+        return new GetLogsReturningValues(logs, unixTime);
     }
 }

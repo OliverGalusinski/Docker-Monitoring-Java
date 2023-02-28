@@ -25,9 +25,11 @@ public class MonitorContainer extends Thread {
         while(!isInterrupted()){
             System.out.println("Getting new Logs from " + container.getId());
             GetLogsReturningValues logsAndTimeStamp = GetLogs.getLogs(dockerClient, container.getId(), timeStamp);
-            this.timeStamp = logsAndTimeStamp.timeStamp();
-            logsAndTimeStamp.logs().forEach(System.out::println);
-            jsonHandler.writeListIntoFile(logsAndTimeStamp.logs());
+            if(!logsAndTimeStamp.logs().isEmpty()){
+                this.timeStamp = logsAndTimeStamp.timeStamp();
+                // logsAndTimeStamp.logs().forEach(System.out::println);
+                jsonHandler.writeListIntoFile(logsAndTimeStamp.logs());
+            }
             try {
                 sleep(3000);
             } catch (InterruptedException e) {

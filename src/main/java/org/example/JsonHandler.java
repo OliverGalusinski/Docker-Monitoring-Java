@@ -1,17 +1,19 @@
 package org.example;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import java.io.File;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class JsonHandler {
     // Creates and Handles JSON Files.
     // Also Implements HTTP Send request to the Server.
-    private String containerID;
+    private final String containerID;
+
     public JsonHandler(String containerID){
         this.containerID = containerID;
         this.createJson(containerID);
@@ -33,36 +35,38 @@ public class JsonHandler {
         String fileName = containerID + ".json";
         try{
             //Read File
-            StringBuilder jsonString = new StringBuilder();
+            List<String> oldLogs = new ArrayList<>();
             BufferedReader br = new BufferedReader(new FileReader(fileName));
             String line;
             while ((line = br.readLine()) != null) {
-                jsonString.append(line);
+                if (!line.equals("{") && !line.equals("}")){
+                    oldLogs.add(line.split("\"")[3]);
+                }
             }
             br.close();
-            JSONObject logData = new JSONObject();
-            if(!jsonString.isEmpty()){
-                JSONParser parser = new JSONParser();
-                System.out.println(jsonString.toString());
-                logData = (JSONObject) parser.parse(jsonString.toString());
-            }
 
-
-
+            toWrite.addAll(0, oldLogs);
             FileWriter writer = new FileWriter(fileName);
-            JSONObject finalLogData = logData;
-            toWrite.forEach(singleLog -> {
-                finalLogData.put(singleLog, 1);
-            });
 
-            writer.write(finalLogData.toJSONString());
+            writer.write(convertListToJsonString(toWrite));
             writer.flush();
             writer.close();
         } catch (IOException ioException){
             return false;
-        } catch (ParseException e) {
-            return false;
         }
         return true;
+    }
+
+    public String convertListToJsonString(List<String> toConvert){
+        StringBuilder converted = new StringBuilder("{\n");
+        toConvert.stream().forEach(log -> {
+            String timeStamp = log.split(" ")[1];
+            if(!log.equals(toConvert.get(toConvert.size()-1))){
+                converted.append("\"" + timeStamp + "\": \"" + log +"\",\n");
+            } else {
+                converted.append("\"" + timeStamp + "\": \"" + log + "\"\n}");
+            }
+        });
+        return converted.toString();
     }
 }

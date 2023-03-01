@@ -1,5 +1,3 @@
-package org.example;
-
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -21,7 +19,7 @@ public class CheckForNewContainer extends Thread{
     private final ArrayList<String> containers = new ArrayList<>();
     private final DockerClient dockerClient;
 
-    // Creates a Dockerclient
+    // Creates a Docker-client
     // Also check for all Available Containers
     public CheckForNewContainer(){
         DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
@@ -50,9 +48,9 @@ public class CheckForNewContainer extends Thread{
     }
 
     private void checkForNewContainers(){
-        List<Container> newContainers = dockerClient.listContainersCmd().exec(); // Creates a list of all new Containers
+        List<Container> newContainers = dockerClient.listContainersCmd().withShowSize(true).withShowAll(true).exec(); // Creates a list of all new Containers
 
-        // If newContainer doesnt exist
+        // If newContainer doesn't exist
         newContainers.forEach(newContainer -> {
             if(!containers.contains(newContainer.getId())){
                 MonitorContainer monitorContainer = new MonitorContainer(dockerClient, newContainer);
@@ -63,7 +61,7 @@ public class CheckForNewContainer extends Thread{
             }
         });
 
-        // If newContainer doesnt exist
+        // If newContainer doesn't exist
         for(int i = 0; i < containers.size(); i++){
             int finalI = i;
             if(newContainers.stream().noneMatch(newContainer -> newContainer.getId().equals(containers.get(finalI)))){

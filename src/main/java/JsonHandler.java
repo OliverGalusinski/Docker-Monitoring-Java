@@ -1,14 +1,24 @@
-import java.io.*;
+import com.github.dockerjava.api.model.Container;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-public record JsonHandler(String containerID) {
-    public JsonHandler(String containerID) {
-        this.containerID = containerID;
-        this.createJson(containerID);
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class JsonHandler {
+    private Container container;
+    private List<String> logs = new ArrayList<>();
+
+    public JsonHandler(Container container) {
+        this.container = container;
+        this.createJson(container.getId());
     }
 
     public void createJson(String filePath) {
         try {
-            File file = new File("savedData/" + filePath + ".json");
+            File file = new File(filePath + ".json");
             if (!file.exists()) {
                 file.createNewFile();
                 System.out.println("Created");
@@ -19,26 +29,26 @@ public record JsonHandler(String containerID) {
     }
 
     public boolean writeLogOntoFile(String log) {
-        String fileName = containerID + ".json";
-        StringBuilder toWrite = new StringBuilder();
+        logs.add(log);
+        String fileName = container.getId() + ".json";
         try{
-            //Read File
-            BufferedReader br = new BufferedReader(new FileReader(fileName));
-            String line;
-            while ((line = br.readLine()) != null) {
-                toWrite.append(line + "\n");
-            }
-            br.close();
-
-            toWrite.append(log + "\n");
-
             FileWriter writer = new FileWriter(fileName);
 
-            writer.write(toWrite.toString());
+            JSONParser jsonParser = new JSONParser();
+            JSONObject json = (JSONObject) jsonParser.parse("{\"logs\": " +
+                    logs.toString().replaceAll("\\[", "[\"")
+                    .replaceAll("]", "\"]")
+                    .replaceAll(",", "\", \"")  +
+                    ", \"StorageUsed\": \"" + container.getSizeRootFs() +
+                    "\" , \"Image\": \"" + container.getImage() + "\"}");
+
+            writer.write(json.toJSONString());
             writer.flush();
             writer.close();
         } catch (IOException ioException){
             return false;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
         return true;
     }

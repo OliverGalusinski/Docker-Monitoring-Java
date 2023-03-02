@@ -15,7 +15,7 @@ public class MonitorContainer extends Thread {
         this.container = container;
         this.dockerClient = dockerClient;
         this.timeStamp = 0;
-        this.jsonHandler = new JsonHandler(container.getId());
+        this.jsonHandler = new JsonHandler(container);
     }
 
     public void run(){

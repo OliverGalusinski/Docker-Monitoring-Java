@@ -5,6 +5,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class JsonHandler {
@@ -35,14 +36,14 @@ public class JsonHandler {
             FileWriter writer = new FileWriter(fileName);
 
             JSONParser jsonParser = new JSONParser();
-            JSONObject json = (JSONObject) jsonParser.parse("{\"logs\": " +
+            String toWrite = jsonParser.parse("{\"logs\": " +
                     logs.toString().replaceAll("\\[", "[\"")
                     .replaceAll("]", "\"]")
                     .replaceAll(",", "\", \"")  +
                     ", \"StorageUsed\": \"" + container.getSizeRootFs() +
-                    "\" , \"Image\": \"" + container.getImage() + "\"}");
+                    "\" , \"Image\": \"" + container.getImage() + "\"}").toString();
 
-            writer.write(json.toJSONString());
+            writer.write(toWrite);
             writer.flush();
             writer.close();
         } catch (IOException ioException){

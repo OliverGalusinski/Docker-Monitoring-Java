@@ -1,6 +1,11 @@
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallbackTemplate;
+import com.github.dockerjava.api.command.EventsCmd;
+import com.github.dockerjava.api.command.InspectContainerCmd;
 import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.Event;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
+import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
@@ -37,13 +42,20 @@ public class CheckForNewContainer extends Thread{
 
     // This gets executed as Thread is being started
     public void run(){
-        while(!isInterrupted()) {
-            try {
-                checkForNewContainers();
-                sleep(3000);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        checkForNewContainers();
+        try {
+            EventsCmd eventsCmd = dockerClient.eventsCmd();
+
+            eventsCmd.withEventTypeFilter("container")
+                    .withEventFilter("create")
+                    .exec(new ResultCallbackTemplate<>() {
+                        @Override
+                        public void onNext(Event event) {
+                            checkForNewContainers();
+                        }
+                    });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

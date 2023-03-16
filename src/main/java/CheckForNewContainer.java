@@ -11,6 +11,8 @@ import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +28,7 @@ public class CheckForNewContainer extends Thread{
 
     // Creates a Docker-client
     // Also check for all Available Containers
-    public CheckForNewContainer(){
+    public CheckForNewContainer() throws URISyntaxException {
         DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
 
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()

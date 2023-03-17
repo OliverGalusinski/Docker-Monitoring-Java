@@ -94,19 +94,19 @@ public class JsonHandler {
             FileWriter writer = new FileWriter(fileName);
 
             JSONParser jsonParser = new JSONParser();
-            String toWrite = "{\"logs\": " +
+            StringBuilder toWrite = new StringBuilder("{\"logs\": " +
                     logs.toString().replaceAll("\\[", "[\"")
-                    .replaceAll("]", "\"]")
-                    .replaceAll(",", "\", \"")  +
+                            .replaceAll("]", "\"]")
+                            .replaceAll(",", "\", \"") +
                     ", \"StorageUsed\": \"" + container.getSizeRootFs() +
-                    "\" , \"Image\": \"" + container.getImage() + "\", ";
+                    "\" , \"Image\": \"" + container.getImage() + "\", ");
 
             for(String stat : statsList){
-                toWrite += ", " + stat;
+                toWrite.append(", ").append(stat);
             }
-            toWrite = jsonParser.parse(toWrite + "}").toString();
+            toWrite = new StringBuilder(jsonParser.parse(toWrite + "}").toString());
 
-            writer.write(toWrite);
+            writer.write(toWrite.toString());
             writer.flush();
             writer.close();
         } catch (IOException ie){

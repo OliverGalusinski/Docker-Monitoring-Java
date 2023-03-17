@@ -51,7 +51,7 @@ public class MonitorContainer extends Thread {
                 }
             };
             getStats();
-            logContainerCmd.exec(callbackTemplate).awaitCompletion(10, TimeUnit.SECONDS);
+            logContainerCmd.exec(callbackTemplate).awaitCompletion(120, TimeUnit.MINUTES);
         } catch (Exception ie) {
             throw new RuntimeException(ie);
         }

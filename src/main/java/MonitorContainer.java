@@ -1,14 +1,11 @@
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.async.ResultCallbackTemplate;
 import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.async.ResultCallbackTemplate;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.api.model.Info;
 import com.github.dockerjava.api.model.Statistics;
 
 import java.io.Closeable;
-
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +18,6 @@ public class MonitorContainer extends Thread {
     private final DockerClient dockerClient;
     private final JsonHandler jsonHandler;
     private final long totalMemory;
-    private Info cpuInfo;
 
     public MonitorContainer(DockerClient dockerClient, Container container){
         this.container = container;
@@ -82,7 +78,7 @@ public class MonitorContainer extends Thread {
                 System.out.println("von : " + statistics.getCpuStats().getSystemCpuUsage());
                 System.out.println("Memory usage: " + statistics.getMemoryStats().getUsage());
                 System.out.println("von : " + totalMemory);
-                System.out.println("Network RX: " + statistics.getNetworks().get("eth0").getRxBytes());
+                System.out.println("Network RX: " + Objects.requireNonNull(statistics.getNetworks()).get("eth0").getRxBytes());
                 System.out.println("Network TX: " + statistics.getNetworks().get("eth0").getTxBytes());
                 System.out.println("------------------------------------------");
                 try {
@@ -103,7 +99,7 @@ public class MonitorContainer extends Thread {
             }
 
             @Override
-            public void close() throws IOException {
+            public void close() {
                 countDownLatch.countDown();
             }
         });

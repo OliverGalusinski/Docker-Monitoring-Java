@@ -68,14 +68,8 @@ public class MonitorContainer extends Thread {
 
             @Override
             public void onNext(Statistics statistics) {
-                System.out.println("Container ID: " + container.getId());
-                System.out.println("CPU usage: " + Objects.requireNonNull(statistics.getCpuStats().getCpuUsage()).getTotalUsage());
-                System.out.println("von : " + statistics.getCpuStats().getSystemCpuUsage());
-                System.out.println("Memory usage: " + statistics.getMemoryStats().getUsage());
-                System.out.println("von : " + totalMemory);
-                System.out.println("Network RX: " + Objects.requireNonNull(statistics.getNetworks()).get("eth0").getRxBytes());
-                System.out.println("Network TX: " + statistics.getNetworks().get("eth0").getTxBytes());
-                System.out.println("------------------------------------------");
+                System.out.println("Monitoring " + container.getId());
+                jsonHandler.saveStats(statistics);
                 try {
                     sleep(5000);
                 } catch (InterruptedException e) {

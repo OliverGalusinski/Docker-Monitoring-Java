@@ -8,6 +8,7 @@ import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
+import org.json.simple.parser.ParseException;
 
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -20,6 +21,7 @@ import java.util.List;
 public class CheckForNewContainer extends Thread{
     private final HashMap<String, MonitorContainer> monitoredContainers = new HashMap<>(); // A list of all Containers that are being Monitored
     private final DockerClient dockerClient;
+    private JsonHandler jsonHandler = new JsonHandler();
 
     // Creates a Docker-client
     // Also check for all Available Containers
@@ -61,7 +63,10 @@ public class CheckForNewContainer extends Thread{
     }
 
     public void firstContainerCheck(){
-        dockerClient.listContainersCmd().exec().forEach(this::addContainer);
+        dockerClient.listContainersCmd().exec().forEach(container -> {
+            this.addContainer(container);
+            jsonHandler.addContainer(container.getId());
+        });
     }
 
     public void addContainerWithID(String containerID){

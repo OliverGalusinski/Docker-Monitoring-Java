@@ -51,15 +51,10 @@ public class MonitorContainer extends Thread {
                 }
             };
             getStats();
-            logContainerCmd.exec(callbackTemplate).awaitCompletion();
+            logContainerCmd.exec(callbackTemplate).awaitCompletion(10, TimeUnit.SECONDS);
         } catch (Exception ie) {
             throw new RuntimeException(ie);
         }
-    }
-
-    public void stopThread(){
-        System.out.println("Stopping Container Monitoring of " + this.container.getId());
-        this.interrupt();
     }
 
     private void getStats() throws InterruptedException {

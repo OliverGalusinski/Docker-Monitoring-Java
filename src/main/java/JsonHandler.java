@@ -17,7 +17,7 @@ public class JsonHandler {
 
     public void createJson(String filePath) {
         try {
-            File file = new File("/data/" + filePath + ".json");
+            File file = new File("data/" + filePath + ".json");
             if (!file.exists()) {
                 file.createNewFile();
                 System.out.println("Created");
@@ -29,7 +29,7 @@ public class JsonHandler {
 
     public void writeLogOntoFile(String log) {
         logs.add(log);
-        String fileName ="/data/" +  container.getId() + ".json";
+        String fileName ="data/" +  container.getId() + ".json";
         try{
             FileWriter writer = new FileWriter(fileName);
 

@@ -1,13 +1,17 @@
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallbackTemplate;
+import com.github.dockerjava.api.command.EventsCmd;
 import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.Event;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
+import org.json.simple.parser.ParseException;
 
+import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,12 +20,12 @@ import java.util.List;
 // Maintains all Information inside of Lists
 public class CheckForNewContainer extends Thread{
     private final HashMap<String, MonitorContainer> monitoredContainers = new HashMap<>(); // A list of all Containers that are being Monitored
-    private final ArrayList<String> containers = new ArrayList<>();
     private final DockerClient dockerClient;
+    private JsonHandler jsonHandler = new JsonHandler();
 
     // Creates a Docker-client
     // Also check for all Available Containers
-    public CheckForNewContainer(){
+    public CheckForNewContainer() {
         DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
 
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
@@ -37,39 +41,53 @@ public class CheckForNewContainer extends Thread{
 
     // This gets executed as Thread is being started
     public void run(){
-        while(!isInterrupted()) {
-            try {
-                checkForNewContainers();
-                sleep(3000);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        firstContainerCheck();
+        try {
+            EventsCmd eventsCmd = dockerClient.eventsCmd();
+
+            eventsCmd.withEventTypeFilter("container")
+                    .exec(new ResultCallbackTemplate<>() {
+                        @Override
+                        public void onNext(Event event) {
+                            String eventAction = event.getAction();
+                            if(eventAction.equals("start")) {
+                                addContainerWithID(event.getId());
+                            } else if(eventAction.equals("kill") || eventAction.equals("die") || eventAction.equals("destroy") || eventAction.equals("stop")){
+                                stopContainer(event.getId());
+                            }
+                        }
+                    }).awaitCompletion();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void firstContainerCheck(){
+        dockerClient.listContainersCmd().exec().forEach(container -> {
+            this.addContainer(container);
+            jsonHandler.addContainer(container.getId());
+        });
+    }
+
+    public void addContainerWithID(String containerID){
+        List<Container> containers = dockerClient.listContainersCmd().exec();
+        for (Container container : containers){
+            if(container.getId().equals(containerID)){
+                addContainer(container);
+                break;
             }
         }
     }
 
-    private void checkForNewContainers(){
-        List<Container> newContainers = dockerClient.listContainersCmd().withShowSize(true).withShowAll(true).exec(); // Creates a list of all new Containers
+    public void addContainer(Container toAdd){
+        MonitorContainer monitorContainer = new MonitorContainer(this.dockerClient, toAdd);
+        monitorContainer.setName(toAdd.getId());
+        monitorContainer.start();
+        monitoredContainers.put(toAdd.getId(), monitorContainer);
+    }
 
-        // If newContainer doesn't exist
-        newContainers.forEach(newContainer -> {
-            if(!containers.contains(newContainer.getId())){
-                MonitorContainer monitorContainer = new MonitorContainer(dockerClient, newContainer);
-                monitorContainer.start();
-                containers.add(newContainer.getId());
-                monitoredContainers.put(newContainer.getId(), monitorContainer);
-                System.out.println("Added new Container: " + newContainer.getId());
-            }
-        });
-
-        // If newContainer doesn't exist
-        for(int i = 0; i < containers.size(); i++){
-            int finalI = i;
-            if(newContainers.stream().noneMatch(newContainer -> newContainer.getId().equals(containers.get(finalI)))){
-                monitoredContainers.get(containers.get(i)).stopThread();
-                monitoredContainers.remove(containers.get(i));
-                containers.remove(i);
-                i--;
-            }
-        }
+    public void stopContainer(String containerID){
+        System.out.println("Stopping Container Monitoring of " + containerID);
+        monitoredContainers.remove(containerID);
     }
 }

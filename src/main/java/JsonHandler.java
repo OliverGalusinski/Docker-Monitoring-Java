@@ -29,7 +29,7 @@ public class JsonHandler {
     }
 
     public boolean writeLogOntoFile(String log) {
-        logs.add(log);
+        logs.add(log.replaceAll("\"", "\\\\\\\""));
         String fileName = container.getId() + ".json";
         try{
             FileWriter writer = new FileWriter(fileName);
